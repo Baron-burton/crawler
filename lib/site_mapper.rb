@@ -23,6 +23,8 @@ class SiteMapper
     paths.each do |path|
       next if encountered_paths.include?(path)
 
+      puts "Currently on: #{path}"
+
       encountered_paths.add(path)
       full_path = build_path(path)
 
