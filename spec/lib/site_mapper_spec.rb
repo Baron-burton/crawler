@@ -1,44 +1,17 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require './lib/crawler'
 require './lib/site_mapper'
 
 RSpec.describe SiteMapper do
-  describe '#retrieve_links' do
+  describe '#retrieve_internal_links' do
     let(:domain) { 'https://monzo.com' }
-    let(:html_body) do
-      <<-HTML
-        <html>
-          <head><title>Monzo - The Bank of the Future</title></head>
-          <body>
-            <header>
-              <div>
-                <a href="/" title="Monzo Home Page">Monzo</a>
-                <nav>
-                  <a href="/about">About</a>
-                  <a href="/blog">Blog</a>
-                  <a href="/community">Community</a>
-                  <a href="/help">Help</a>
-                </nav>
-              </div>
-            </header>
-          </body>
-          <footer>
-            <div>
-              <nav>
-                <a href="https://twitter.com">Twitter</a>
-                <a href="https://facebook.com">Facebook</a>
-                <a href="https://instagram.com">Instagram</a>
-              </nav>
-            </div>
-          </footer>
-        </html
-      HTML
-    end
 
-    let(:expected_links) do
+    subject { described_class.new(domain) }
+
+    let(:first_links) do
       %w[
-        https://monzo.com
         /about
         /blog
         /community
@@ -46,30 +19,72 @@ RSpec.describe SiteMapper do
       ]
     end
 
-    let(:unexpected_links) do
-      %w[
-        /
-        https://twitter.com
-        https://facebook.com
-        https://instagram.com
-      ]
+    context 'no nested links' do
+      let(:expected_site_map) do
+        {
+          "#{domain}": {
+            "/about": {},
+            "/blog": {},
+            "/community": {},
+            "/help": {}
+          }
+        }
+      end
+
+      before do
+        allow(Crawler).to receive(:crawl_internal_links)
+          .and_return(first_links)
+      end
+
+      it 'returns internal links for a given domain' do
+        expect(subject.map_site).to eq(expected_site_map)
+      end
     end
 
-    subject { described_class.new(domain) }
+    context 'with nested links' do
+      let(:about_nested_links) do
+        %w[
+          /community/making-monzo
+          /faq
+          /legal/cookie-policy
+          /blog
+        ]
+      end
 
-    before do
-      expect(subject).to receive(:open).and_return(html_body)
-    end
+      let(:initial_site_map) do
+        {
+          "#{domain}": {
+            "/about": {},
+            "/blog": {},
+            "/community": {},
+            "/help": {}
+          }
+        }
+      end
 
-    it 'returns internal links for a given domain' do
-      retrieved_links = subject.retrieve_links
+      let(:expected_site_map) do
+        {
+          "#{domain}": {
+            "/about": {},
+            "/blog": {},
+            "/community": { "/making-monzo": {} },
+            "/help": {},
+            "/faq": {},
+            "/legal": { "/cookie-policy": {} }
+          }
+        }
+      end
 
-      aggregate_failures do
-        unexpected_links.each do |bad_link|
-          expect(retrieved_links).not_to include(bad_link)
-        end
+      before do
+        subject.site_map = initial_site_map
+        subject.encountered_paths = Set[first_links]
 
-        expect(retrieved_links).to match_array(expected_links)
+        allow(Crawler).to receive(:crawl_internal_links)
+          .and_return(about_nested_links)
+      end
+
+      it 'nests links under the correct path' do
+        expect(subject.map_site).to include(expected_site_map)
       end
     end
   end
