@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require 'nokogiri'
-require 'open-uri'
-
 class SiteMapper
   attr_reader :domain
   attr_accessor :links
@@ -12,18 +9,7 @@ class SiteMapper
     @links = [domain]
   end
 
-  def retrieve_links
-    page = Nokogiri::HTML(open(domain))
-
-    page.search('a').map do |link|
-      links << link['href'] if valid_link(link['href'])
-    end.compact
-
-    links
-  end
-
-  def valid_link(link)
-    link.start_with?('/') &&
-      %r{\/\b[a-zA-Z]*\b}.match?(link)
+  def retrieve_internal_links
+    links + Crawler.crawl_internal_links(domain)
   end
 end
