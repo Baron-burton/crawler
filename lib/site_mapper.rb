@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'set'
+require './lib/crawler'
 
 class SiteMapper
   attr_reader :domain
@@ -25,7 +26,8 @@ class SiteMapper
       encountered_paths.add(path)
       full_path = build_path(path)
 
-      retrieved_paths = Crawler.crawl_internal_links(full_path)
+      retrieved_paths = ::Crawler.crawl_internal_links(full_path)
+
       add_to_site_map(retrieved_paths)
 
       unmapped_paths = retrieved_paths_not_mapped(retrieved_paths)
