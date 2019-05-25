@@ -9,6 +9,8 @@ class Crawler
       page = Nokogiri::HTML(open(URI.encode(domain)))
 
       page.search('a').map do |link|
+        next if link['href'].nil?
+
         link['href'] if valid_internal_link(link['href'])
       end.compact
 
