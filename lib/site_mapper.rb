@@ -27,6 +27,7 @@ class SiteMapper
       full_path = build_path(path)
 
       retrieved_paths = ::Crawler.crawl_internal_links(full_path)
+      next if retrieved_paths.nil?
 
       add_to_site_map(retrieved_paths)
 
