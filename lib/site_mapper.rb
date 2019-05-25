@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'set'
+require './lib/crawler'
 
 class SiteMapper
   attr_reader :domain
@@ -22,10 +23,14 @@ class SiteMapper
     paths.each do |path|
       next if encountered_paths.include?(path)
 
+      puts "Currently on: #{path}"
+
       encountered_paths.add(path)
       full_path = build_path(path)
 
-      retrieved_paths = Crawler.crawl_internal_links(full_path)
+      retrieved_paths = ::Crawler.crawl_internal_links(full_path)
+      next if retrieved_paths.nil?
+
       add_to_site_map(retrieved_paths)
 
       unmapped_paths = retrieved_paths_not_mapped(retrieved_paths)
@@ -65,3 +70,5 @@ class SiteMapper
     end
   end
 end
+
+puts SiteMapper.new(ARGV.first).map_site
