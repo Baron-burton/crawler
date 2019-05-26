@@ -1,6 +1,23 @@
 # Crawler
 
-Creates a map of a given site via its internal links
+A small ruby app that creates a map of a given site via its internal links
 
-To run the crawler, simply clone the repository and run `ruby lib/site_mapper.rb <insert-domain>`
-from within the app directory
+
+## Installation
+
+1. Clone the repository
+
+2. Install the gems
+
+```
+bundle install
+```
+
+## Usage
+
+To run the crawler simply call the executable file from within the app directory
+and pass it a domain to crawl:
+
+```
+./crawl <your-domain>
+```
