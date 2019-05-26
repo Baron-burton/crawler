@@ -70,5 +70,3 @@ class SiteMapper
     end
   end
 end
-
-puts SiteMapper.new(ARGV.first).map_site
