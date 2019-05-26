@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require './lib/site_mapper'
+
+puts SiteMapper.new(ARGV.first).map_site

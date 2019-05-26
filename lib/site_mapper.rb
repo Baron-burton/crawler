@@ -14,6 +14,8 @@ class SiteMapper
   end
 
   def map_site
+    return puts 'Please provide a domain to crawl' if domain.nil?
+
     retrieve_internal_links([domain])
   end
 
@@ -70,5 +72,3 @@ class SiteMapper
     end
   end
 end
-
-puts SiteMapper.new(ARGV.first).map_site

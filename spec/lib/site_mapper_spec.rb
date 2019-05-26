@@ -5,10 +5,31 @@ require './lib/crawler'
 require './lib/site_mapper'
 
 RSpec.describe SiteMapper do
-  describe '#retrieve_internal_links' do
-    let(:domain) { 'https://monzo.com' }
+  subject { described_class.new(domain) }
+  let(:domain) { 'https://monzo.com' }
 
-    subject { described_class.new(domain) }
+  describe '#map_site' do
+    context 'when the domain is present' do
+      it 'calls #retrieve_internal_links' do
+        expect(subject).to receive(:retrieve_internal_links)
+          .with(array_including(domain))
+
+        subject.map_site
+      end
+    end
+
+    context 'when the domain is nil' do
+      let(:domain) { nil }
+
+      it 'prompts the user to provide a domain' do
+        expect { subject.map_site }
+          .to output("Please provide a domain to crawl\n")
+          .to_stdout
+      end
+    end
+  end
+
+  describe '#retrieve_internal_links' do
 
     let(:first_links) do
       %w[
