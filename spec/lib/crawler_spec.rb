@@ -4,6 +4,8 @@ require 'spec_helper'
 require './lib/crawler'
 
 RSpec.describe Crawler do
+  CRAWLER_SPEC_TIMEOUT = 0.5
+
   describe '.crawl_internal_links' do
     context 'when requesting good URIs' do
       let(:domain) { 'https://monzo.com' }
@@ -55,8 +57,19 @@ RSpec.describe Crawler do
         ]
       end
 
+      let(:response_mock) do
+        double(
+          'Response Mock',
+          body: html_body,
+          status: 200
+        )
+      end
+
       before do
-        expect(described_class).to receive(:open).and_return(html_body)
+        allow(described_class)
+          .to receive(:response)
+          .with(domain)
+          .and_return(response_mock)
       end
 
       it 'returns internal links for a given domain' do
@@ -74,11 +87,19 @@ RSpec.describe Crawler do
 
     context 'when requesting bad URIs' do
       let(:bad_domain) { 'https://monzo.com/not-a-page' }
+      let(:response_mock) { double('Response Mock', status: 404) }
+
+      before do
+        allow(described_class)
+          .to receive(:response)
+          .with(bad_domain)
+          .and_return(response_mock)
+      end
 
       it 'returns an error message' do
-        expect { described_class.crawl_internal_links(bad_domain) }
-          .to output("Couldn't retrieve links from #{bad_domain}\n")
-          .to_stdout
+        retrieved_links = described_class.crawl_internal_links(bad_domain)
+
+        expect(retrieved_links).to be_nil
       end
     end
   end

@@ -30,7 +30,6 @@ RSpec.describe SiteMapper do
   end
 
   describe '#retrieve_internal_links' do
-
     let(:first_links) do
       %w[
         /about
