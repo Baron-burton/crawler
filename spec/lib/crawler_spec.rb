@@ -99,11 +99,7 @@ RSpec.describe Crawler do
         let(:response_mock) { double('Response Mock', status: 404) }
 
         it 'does not scrape the page and returns nil' do
-          expect(Nokogiri::HTML::Document).not_to receive(:parse).with(any_args)
-
-          retrieved_links = described_class.crawl_internal_links(bad_domain)
-
-          expect(retrieved_links).to be_nil
+          does_not_scrape_page(bad_domain)
         end
       end
 
@@ -112,13 +108,28 @@ RSpec.describe Crawler do
         let(:response_mock) { double('Response Mock', status: 302) }
 
         it 'does not scrape the page and returns nil' do
-          expect(Nokogiri::HTML::Document).not_to receive(:parse).with(any_args)
+          does_not_scrape_page(bad_domain)
+        end
+      end
 
-          retrieved_links = described_class.crawl_internal_links(bad_domain)
+      context 'when the response returns a 500' do
+        let(:bad_domain) { 'https://500.com/not-a-page' }
+        let(:response_mock) { double('Response Mock', status: 500) }
 
-          expect(retrieved_links).to be_nil
+        it 'does not scrape the page and returns nil' do
+          does_not_scrape_page(bad_domain)
         end
       end
     end
+  end
+
+  private
+
+  def does_not_scrape_page(bad_domain)
+    expect(Nokogiri::HTML::Document).not_to receive(:parse).with(any_args)
+
+    retrieved_links = described_class.crawl_internal_links(bad_domain)
+
+    expect(retrieved_links).to be_nil
   end
 end

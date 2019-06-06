@@ -6,7 +6,7 @@ require 'faraday'
 class Crawler
   class << self
     TIMEOUT = 0.5
-    BAD_HTTP_STATUSES = [404, 302, 301].freeze
+    BAD_HTTP_STATUSES = [500, 404, 302, 301].freeze
 
     def crawl_internal_links(domain)
       res = response(domain)
