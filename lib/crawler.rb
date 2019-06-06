@@ -6,11 +6,12 @@ require 'faraday'
 class Crawler
   class << self
     TIMEOUT = 0.5
+    BAD_HTTP_STATUSES = [404, 302, 301].freeze
 
     def crawl_internal_links(domain)
       res = response(domain)
 
-      return nil if res.status == 404
+      return nil if BAD_HTTP_STATUSES.include? res.status
 
       page = Nokogiri::HTML(res.body)
       page.search('a').map do |link|

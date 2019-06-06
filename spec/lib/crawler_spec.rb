@@ -7,6 +7,7 @@ RSpec.describe Crawler do
   CRAWLER_SPEC_TIMEOUT = 0.5
 
   describe '.crawl_internal_links' do
+
     context 'when requesting good URIs' do
       let(:domain) { 'https://monzo.com' }
       let(:html_body) do
@@ -86,9 +87,6 @@ RSpec.describe Crawler do
     end
 
     context 'when requesting bad URIs' do
-      let(:bad_domain) { 'https://monzo.com/not-a-page' }
-      let(:response_mock) { double('Response Mock', status: 404) }
-
       before do
         allow(described_class)
           .to receive(:response)
@@ -96,10 +94,30 @@ RSpec.describe Crawler do
           .and_return(response_mock)
       end
 
-      it 'returns an error message' do
-        retrieved_links = described_class.crawl_internal_links(bad_domain)
+      context 'receiving a 404' do
+        let(:bad_domain) { 'https://monzo.com/not-a-page' }
+        let(:response_mock) { double('Response Mock', status: 404) }
 
-        expect(retrieved_links).to be_nil
+        it 'does not scrape the page and returns nil' do
+          expect(Nokogiri::HTML::Document).not_to receive(:parse).with(any_args)
+
+          retrieved_links = described_class.crawl_internal_links(bad_domain)
+
+          expect(retrieved_links).to be_nil
+        end
+      end
+
+      context 'when the response redirects to a different site' do
+        let(:bad_domain) { 'https://sneaky-redirect.com/not-a-page' }
+        let(:response_mock) { double('Response Mock', status: 302) }
+
+        it 'does not scrape the page and returns nil' do
+          expect(Nokogiri::HTML::Document).not_to receive(:parse).with(any_args)
+
+          retrieved_links = described_class.crawl_internal_links(bad_domain)
+
+          expect(retrieved_links).to be_nil
+        end
       end
     end
   end
