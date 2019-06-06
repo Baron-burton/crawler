@@ -6,8 +6,18 @@ require './lib/crawler'
 RSpec.describe Crawler do
   CRAWLER_SPEC_TIMEOUT = 0.5
 
-  describe '.crawl_internal_links' do
+  describe '#initialize' do
+    let(:domain) { 'https://monzo.com' }
+    let(:absolute_path) { domain + '/about' }
 
+    it 'sets the :base_domain attribute' do
+      crawler = described_class.new(absolute_path)
+
+      expect(crawler.base_domain).to eq(domain)
+    end
+  end
+
+  describe '#crawl_internal_links' do
     context 'when requesting good URIs' do
       let(:domain) { 'https://monzo.com' }
       let(:html_body) do
@@ -66,15 +76,17 @@ RSpec.describe Crawler do
         )
       end
 
+      let(:crawler) { described_class.new(domain) }
+
       before do
-        allow(described_class)
+        allow(crawler)
           .to receive(:response)
           .with(domain)
           .and_return(response_mock)
       end
 
       it 'returns internal links for a given domain' do
-        retrieved_links = described_class.crawl_internal_links(domain)
+        retrieved_links = crawler.crawl_internal_links(domain)
 
         aggregate_failures do
           unexpected_links.each do |bad_link|
@@ -87,8 +99,10 @@ RSpec.describe Crawler do
     end
 
     context 'when requesting bad URIs' do
+      let(:crawler) { described_class.new(bad_domain) }
+
       before do
-        allow(described_class)
+        allow(crawler)
           .to receive(:response)
           .with(bad_domain)
           .and_return(response_mock)
@@ -128,7 +142,7 @@ RSpec.describe Crawler do
   def does_not_scrape_page(bad_domain)
     expect(Nokogiri::HTML::Document).not_to receive(:parse).with(any_args)
 
-    retrieved_links = described_class.crawl_internal_links(bad_domain)
+    retrieved_links = crawler.crawl_internal_links(bad_domain)
 
     expect(retrieved_links).to be_nil
   end
