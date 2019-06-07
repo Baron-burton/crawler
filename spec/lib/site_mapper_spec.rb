@@ -7,6 +7,7 @@ require './lib/site_mapper'
 RSpec.describe SiteMapper do
   subject { described_class.new(domain) }
   let(:domain) { 'https://monzo.com' }
+  let(:crawler) { Crawler.new(domain) }
 
   describe '#map_site' do
     context 'when the domain is present' do
@@ -23,14 +24,12 @@ RSpec.describe SiteMapper do
 
       it 'prompts the user to provide a domain' do
         expect { subject.map_site }
-          .to output("Please provide a domain to crawl\n")
-          .to_stdout
+          .to raise_error('Please provide a domain to crawl')
       end
     end
   end
 
   describe '#retrieve_internal_links' do
-
     let(:first_links) do
       %w[
         /about
@@ -53,7 +52,8 @@ RSpec.describe SiteMapper do
       end
 
       before do
-        allow(Crawler).to receive(:crawl_internal_links)
+        allow(subject).to receive(:crawler).and_return(crawler)
+        allow(crawler).to receive(:crawl_internal_links)
           .and_return(first_links)
       end
 
@@ -100,7 +100,8 @@ RSpec.describe SiteMapper do
         subject.site_map = initial_site_map
         subject.encountered_paths = Set[first_links]
 
-        allow(Crawler).to receive(:crawl_internal_links)
+        allow(subject).to receive(:crawler).and_return(crawler)
+        allow(crawler).to receive(:crawl_internal_links)
           .and_return(about_nested_links)
       end
 

@@ -5,17 +5,16 @@ require './lib/crawler'
 
 class SiteMapper
   attr_reader :domain
-  attr_accessor :site_map, :encountered_paths
+  attr_accessor :site_map, :encountered_paths, :crawler
 
   def initialize(domain)
     @domain = domain
     @site_map = { "#{domain}": {} }
     @encountered_paths = Set.new
+    @crawler = ::Crawler.new(domain)
   end
 
   def map_site
-    return puts 'Please provide a domain to crawl' if domain.nil?
-
     retrieve_internal_links([domain])
   end
 
@@ -30,7 +29,7 @@ class SiteMapper
       encountered_paths.add(path)
       full_path = build_path(path)
 
-      retrieved_paths = ::Crawler.crawl_internal_links(full_path)
+      retrieved_paths = crawler.crawl_internal_links(full_path)
       next if retrieved_paths.nil?
 
       add_to_site_map(retrieved_paths)
@@ -45,7 +44,7 @@ class SiteMapper
   private
 
   def build_path(path)
-    return domain if path == domain
+    return path if path.start_with?(domain)
 
     domain + path
   end
